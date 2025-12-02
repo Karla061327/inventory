@@ -1,0 +1,1077 @@
+{
+	"info": {
+		"_postman_id": "inventory-management-system",
+		"name": "Inventory Management System API",
+		"description": "Complete API collection for Inventory Management System with 31 endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"access_token\", jsonData.access_token);",
+									"    pm.collectionVariables.set(\"user_id\", jsonData.user.id);",
+									"    console.log(\"Token saved: \" + jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@inventory.com\",\n  \"password\": \"Admin123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with email and password to get JWT token"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"profile"
+							]
+						},
+						"description": "Get current user profile"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"created_user_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@inventory.com\",\n  \"password\": \"Admin123!\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"Principal\",\n  \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "Create new user (first user should be admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "Get all users"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Get user by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Update user information"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"Admin123!\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}/change-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}",
+								"change-password"
+							]
+						},
+						"description": "Change user password"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Soft delete user"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Create Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"category_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Electrónica\",\n  \"description\": \"Productos electrónicos y tecnológicos\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories"
+							]
+						},
+						"description": "Create new category"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories?search=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get all categories with optional search"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories/{{category_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"{{category_id}}"
+							]
+						},
+						"description": "Get category by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Productos electrónicos actualizados\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/categories/{{category_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"{{category_id}}"
+							]
+						},
+						"description": "Update category"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories/{{category_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"categories",
+								"{{category_id}}"
+							]
+						},
+						"description": "Soft delete category"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Suppliers",
+			"item": [
+				{
+					"name": "Create Supplier",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"supplier_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Tech Supplies Inc\",\n  \"contactEmail\": \"contact@techsupplies.com\",\n  \"phone\": \"+1-555-0123\",\n  \"address\": \"123 Tech Street, Silicon Valley, CA\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/suppliers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"suppliers"
+							]
+						},
+						"description": "Create new supplier"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Suppliers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/suppliers?search=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"suppliers"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get all suppliers with optional search"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Supplier by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/suppliers/{{supplier_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"suppliers",
+								"{{supplier_id}}"
+							]
+						},
+						"description": "Get supplier by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Supplier",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone\": \"+1-555-9999\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/suppliers/{{supplier_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"suppliers",
+								"{{supplier_id}}"
+							]
+						},
+						"description": "Update supplier"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Supplier",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/suppliers/{{supplier_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"suppliers",
+								"{{supplier_id}}"
+							]
+						},
+						"description": "Soft delete supplier"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Create Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"product_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sku\": \"LAPTOP001\",\n  \"name\": \"Laptop Dell XPS 15\",\n  \"barcode\": \"5901234123457\",\n  \"description\": \"15.6 inch, Intel i7, 16GB RAM, 512GB SSD\",\n  \"categoryId\": {{category_id}},\n  \"costPrice\": 999.99,\n  \"salePrice\": 1499.99,\n  \"reorderPoint\": 10,\n  \"supplierId\": {{supplier_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Create new product"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products?page=1&limit=25&sortBy=name&order=ASC",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "25"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "categoryId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "active",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "name"
+								},
+								{
+									"key": "order",
+									"value": "ASC"
+								}
+							]
+						},
+						"description": "Get all products with pagination, search and filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/{{product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{product_id}}"
+							]
+						},
+						"description": "Get product by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by SKU",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/sku/LAPTOP001",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"sku",
+								"LAPTOP001"
+							]
+						},
+						"description": "Get product by SKU"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by Barcode",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/barcode/5901234123457",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"barcode",
+								"5901234123457"
+							]
+						},
+						"description": "Get product by barcode"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"salePrice\": 1399.99,\n  \"reorderPoint\": 15\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products/{{product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{product_id}}"
+							]
+						},
+						"description": "Update product"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/{{product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{product_id}}"
+							]
+						},
+						"description": "Soft delete product"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Inventory",
+			"item": [
+				{
+					"name": "Stock Entry (Purchase)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": {{product_id}},\n  \"quantity\": 100,\n  \"referenceDoc\": \"ORD-2024-001\",\n  \"notes\": \"Compra mensual de laptops\",\n  \"supplierId\": {{supplier_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/inventory/entry",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"entry"
+							]
+						},
+						"description": "Register stock entry (purchase/receipt)"
+					},
+					"response": []
+				},
+				{
+					"name": "Stock Exit (Sale)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": {{product_id}},\n  \"quantity\": 5,\n  \"exitType\": \"sale\",\n  \"referenceDoc\": \"VTA-2024-001\",\n  \"notes\": \"Venta a cliente corporativo\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/inventory/exit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"exit"
+							]
+						},
+						"description": "Register stock exit (sale/loss/damage)"
+					},
+					"response": []
+				},
+				{
+					"name": "Stock Exit (Damage)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": {{product_id}},\n  \"quantity\": 2,\n  \"exitType\": \"damaged\",\n  \"referenceDoc\": \"DMG-2024-001\",\n  \"notes\": \"Productos dañados en transporte\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/inventory/exit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"exit"
+							]
+						},
+						"description": "Register damaged products"
+					},
+					"response": []
+				},
+				{
+					"name": "Inventory Adjustment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": {{product_id}},\n  \"newQuantity\": 90,\n  \"reason\": \"Conteo físico mensual\",\n  \"imageUrl\": \"https://example.com/evidence/count-2024-12.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/inventory/adjustment",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"adjustment"
+							]
+						},
+						"description": "Adjust inventory based on physical count"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Movement History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/inventory/movements?page=1&limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"movements"
+							],
+							"query": [
+								{
+									"key": "productId",
+									"value": "{{product_id}}",
+									"disabled": true
+								},
+								{
+									"key": "movementType",
+									"value": "sale",
+									"disabled": true
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01",
+									"disabled": true
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						},
+						"description": "Get inventory movements history with filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current Stock",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/inventory/stock/{{product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"stock",
+								"{{product_id}}"
+							]
+						},
+						"description": "Get current stock for a product"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Inventory",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/inventory",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory"
+							]
+						},
+						"description": "Get complete inventory with summary"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tests & Validation",
+			"item": [
+				{
+					"name": "Test Overselling (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": {{product_id}},\n  \"quantity\": 999999,\n  \"exitType\": \"sale\",\n  \"referenceDoc\": \"TEST-OVERSELL\",\n  \"notes\": \"This should fail - testing overselling prevention\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/inventory/exit",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"exit"
+							]
+						},
+						"description": "Test overselling prevention - should return 400 error"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Adjustment Without Evidence (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": {{product_id}},\n  \"newQuantity\": 10,\n  \"reason\": \"Large adjustment without evidence\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/inventory/adjustment",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"inventory",
+								"adjustment"
+							]
+						},
+						"description": "Test adjustment >10% without evidence - should fail"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Duplicate SKU (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sku\": \"LAPTOP001\",\n  \"name\": \"Another Laptop\",\n  \"barcode\": \"9999999999999\",\n  \"categoryId\": {{category_id}},\n  \"costPrice\": 500,\n  \"salePrice\": 800,\n  \"reorderPoint\": 5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Test duplicate SKU - should fail with 409 conflict"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "category_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "supplier_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "created_user_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

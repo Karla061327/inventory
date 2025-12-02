@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx nest:*)",
+      "Bash(npx nest generate:*)",
+      "Bash(npm run build:*)",
+      "Bash(docker:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run start:dev:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
