@@ -9,7 +9,17 @@
       "Bash(docker-compose up:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(npm run start:dev:*)"
+      "Bash(npm run start:dev:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm create:*)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add button input card table dialog select badge tabs dropdown-menu toast label separator -y)",
+      "Bash(npx shadcn@latest add button input card table dialog select badge tabs dropdown-menu sonner label separator -y)",
+      "Bash(dir:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite build)"
     ],
     "deny": [],
     "ask": []

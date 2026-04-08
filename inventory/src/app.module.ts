@@ -21,6 +21,7 @@ import { ProductsModule } from './products/products.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { ReportsModule } from './reports/reports.module';
+import { AuditLogsModule } from './audit-logs/audit-logs.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { ReportsModule } from './reports/reports.module';
     InventoryModule,
     AlertsModule,
     ReportsModule,
+    AuditLogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

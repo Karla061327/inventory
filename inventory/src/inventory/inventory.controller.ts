@@ -23,18 +23,24 @@ import {
 } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from 'src/common/enums';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
-@ApiTags('inventory')
+@ApiTags('inventory') 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('inventory')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Post('entry')
   @ApiOperation({ summary: 'Register inventory entry (purchase/receipt)' })
   @ApiResponse({ status: 201, description: 'Stock entry registered successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   createEntry(
     @Body() dto: CreateInventoryEntryDto,
     @CurrentUser() user: any,

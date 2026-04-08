@@ -32,8 +32,19 @@ export class Alert {
   @JoinColumn({ name: 'resolved_by' })
   resolvedBy: User;
 
+  
   @Column({ name: 'resolved_by', nullable: true })
   resolvedById: number;
+
+  @Column({ type: 'text', nullable: true })
+  notes: string;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'created_by' })
+  createdBy: User;
+
+  @Column({ name: 'created_by', nullable: true })
+  createdById: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

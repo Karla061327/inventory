@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsDate, IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 import { MovementType } from '../../common/enums';
 
@@ -11,17 +11,20 @@ export class QueryMovementsDto {
   productId?: number;
 
   @ApiPropertyOptional({ enum: MovementType })
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsEnum(MovementType)
   @IsOptional()
   movementType?: MovementType;
 
   @ApiPropertyOptional({ example: '2024-01-01' })
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Date)
   @IsDate()
   @IsOptional()
   startDate?: Date;
 
   @ApiPropertyOptional({ example: '2024-12-31' })
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @Type(() => Date)
   @IsDate()
   @IsOptional()

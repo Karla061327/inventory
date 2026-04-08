@@ -14,7 +14,8 @@ import {
 import { Inventory } from '../entities/inventory.entity';
 import { InventoryMovement } from '../entities/inventory-movement.entity';
 import { Product } from '../entities/product.entity';
-import { MovementType } from '../common/enums';
+import { MovementType} from '../common/enums';
+import { AlertsService } from '../alerts/alerts.service';
 
 @Injectable()
 export class InventoryService {
@@ -25,8 +26,11 @@ export class InventoryService {
     private readonly movementRepository: Repository<InventoryMovement>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly alertsService: AlertsService,
   ) {}
 
+
+  
   async createEntry(
     dto: CreateInventoryEntryDto,
     userId: number,
@@ -68,7 +72,16 @@ export class InventoryService {
     inventory.lastMovementAt = new Date();
 
     await this.inventoryRepository.save(inventory);
-    return await this.movementRepository.save(movement);
+    const savedMovement = await this.movementRepository.save(movement);
+
+    await this.alertsService.createInventoryAlert(
+      dto.productId,
+      userId,
+      MovementType.ENTRY,
+      `Entrada de inventario: +${dto.quantity} unidades de '${product.name}'. Stock: ${stockBefore} → ${stockAfter}. Ref: ${dto.referenceDoc || 'N/A'}`,
+    );
+
+    return savedMovement;
   }
 
   async createExit(
@@ -115,7 +128,16 @@ export class InventoryService {
     inventory.lastMovementAt = new Date();
 
     await this.inventoryRepository.save(inventory);
-    return await this.movementRepository.save(movement);
+    const savedMovement = await this.movementRepository.save(movement);
+
+    await this.alertsService.createInventoryAlert(
+      dto.productId,
+      userId,
+      dto.exitType,
+      `Salida de inventario (${dto.exitType}): -${dto.quantity} unidades de '${product.name}'. Stock: ${stockBefore} → ${stockAfter}. Ref: ${dto.referenceDoc || 'N/A'}`,
+    );
+
+    return savedMovement;
   }
 
   async createAdjustment(
@@ -165,7 +187,16 @@ export class InventoryService {
     inventory.lastMovementAt = new Date();
 
     await this.inventoryRepository.save(inventory);
-    return await this.movementRepository.save(movement);
+    const savedMovement = await this.movementRepository.save(movement);
+
+    await this.alertsService.createInventoryAlert(
+      dto.productId,
+      userId,
+      MovementType.ADJUSTMENT,
+      `Ajuste de inventario: '${product.name}' ajustado de ${stockBefore} a ${stockAfter} unidades. Razón: ${dto.reason}`,
+    );
+
+    return savedMovement;
   }
 
   async getMovements(query: QueryMovementsDto) {
@@ -181,7 +212,7 @@ export class InventoryService {
     const skip = (page - 1) * limit;
 
     const queryBuilder = this.movementRepository
-      .createQueryBuilder('movement')
+      .createQueryBuilder('movement')  
       .leftJoinAndSelect('movement.product', 'product')
       .leftJoinAndSelect('movement.createdBy', 'user')
       .orderBy('movement.createdAt', 'DESC');

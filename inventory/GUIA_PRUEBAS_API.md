@@ -52,9 +52,10 @@ Para las siguientes pruebas, vamos a usar estas variables:
 export BASE_URL="http://localhost:3000/api"
 
 # Token (lo obtendremos después del login)
-export TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjQsImVtYWlsIjoiYWRtaW1AaW52ZW50b3J5LmNvbSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2NDYyNTY0NSwiZXhwIjoxNzY0NjI5MjQ1fQ.MjjhK64kFe2ztIwLPBN046zFQG4_Anb7a1LVVa4-4Kk"
-```
+export TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhOTQ5N2YxYy02NmEwLTQ4NWEtODllMC1jMTU4OWY4MzUwYjAiLCJlbWFpbCI6ImFkbWluQHRlc3QuY29tIiwicm9sIjoiYWRtaW4iLCJpYXQiOjE3NjQyOTcyMDAsImV4cCI6MTc2NDM4MzYwMH0.cS73h7uMSA9pKEmJ0U4LlnA1W6YdviuW0X9YtYf4Rvg"
 
+```
+ 
 ---
 
 ## 🔐 AUTENTICACIÓN
