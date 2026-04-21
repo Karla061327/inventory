@@ -127,7 +127,7 @@ Convertir la gestión de inventario en un proceso simple, automático y accesibl
 - Resultado: Trazabilidad completa
 ### 4\.3 Módulo de Alertas
 **RF-009: Stock Bajo**
- 
+
 - Sistema detecta cuando stock < Punto de reorden
 - Cada producto tiene un nivel mínimo configurable
 - Alerta visible: Panel, email (opcional), notificación en sistema
