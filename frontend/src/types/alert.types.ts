@@ -1,4 +1,13 @@
-export type AlertType = 'low_stock' | 'no_movement' | 'slow_moving' | 'discrepancy' | 'inventory_update';
+export type AlertType =
+  | 'low_stock'
+  | 'no_movement'
+  | 'slow_moving'
+  | 'discrepancy'
+  | 'inventory_update'
+  | 'low_sales_30'
+  | 'low_sales_60'
+  | 'low_sales_90'
+  | 'oversell_risk';
 
 export interface Alert {
   id: number;
@@ -20,6 +29,9 @@ export interface Alert {
     sku: string;
     name: string;
     reorderPoint: number;
+    inventory?: {
+      currentStock: number;
+    };
   };
   resolvedBy?: {
     id: number;
@@ -62,7 +74,18 @@ export interface AlertsSummary {
   resolved: number;
   byType: {
     type: AlertType;
-    total: number;
-    unresolved: number;
+    total: string;
+    unresolved: string;
   }[];
+}
+
+export interface CheckResult {
+  lowStock: Alert[];
+  noMovement: Alert[];
+  slowMoving: Alert[];
+  lowSales30: Alert[];
+  lowSales60: Alert[];
+  lowSales90: Alert[];
+  discrepancy: Alert[];
+  oversellRisk: Alert[];
 }

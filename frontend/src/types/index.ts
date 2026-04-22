@@ -23,7 +23,8 @@ export type {
   ResolveAlertDto,
   QueryAlertsDto,
   AlertsResponse,
-  AlertsSummary
+  AlertsSummary,
+  CheckResult,
 } from './alert.types';
 export type { AlertType } from './alert.types';
 export type { AuditLog } from './audit.types';

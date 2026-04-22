@@ -48,6 +48,9 @@ import {
   ArrowUp,
   ArrowDown,
   Activity,
+  ShieldAlert,
+  BarChart2,
+  GitCompareArrows,
 } from 'lucide-react';
 
 export default function AlertList() {
@@ -55,7 +58,6 @@ export default function AlertList() {
   const queryClient = useQueryClient();
   const canResolve = user && ['admin', 'manager'].includes(user.role);
 
-  // Estado para alertas
   const [filter, setFilter] = useState<{
     alertType: AlertType | '';
     isResolved: string;
@@ -67,15 +69,15 @@ export default function AlertList() {
   const [selectedAlert, setSelectedAlert] = useState<number | null>(null);
   const [isResolveOpen, setIsResolveOpen] = useState(false);
 
-  // Estado para movimientos
   const [movementFilter, setMovementFilter] = useState({
     movementType: '' as MovementType | '',
     startDate: '',
     endDate: '',
   });
 
-  // Queries
-  const { data: alertsData, isLoading: loadingAlerts } = useQuery({
+  const [salesPeriod, setSalesPeriod] = useState<'30' | '60' | '90'>('30');
+
+  const { data: alertsData, isLoading: loadingAlerts, error: alertsError } = useQuery({
     queryKey: ['alerts', filter],
     queryFn: () =>
       alertsApi.getAll({
@@ -85,12 +87,12 @@ export default function AlertList() {
       }),
   });
 
-  const { data: summary } = useQuery({
+  const { data: summary, error: summaryError } = useQuery({
     queryKey: ['alerts-summary'],
     queryFn: () => alertsApi.getSummary(),
   });
 
-  const { data: movementsData, isLoading: loadingMovements } = useQuery({
+  const { data: movementsData, isLoading: loadingMovements, error: movementsError } = useQuery({
     queryKey: ['all-movements', movementFilter],
     queryFn: () =>
       inventoryApi.getMovements({
@@ -101,12 +103,23 @@ export default function AlertList() {
       }),
   });
 
-  // Mutations
+  const salesAlertType = `low_sales_${salesPeriod}` as AlertType;
+  const { data: salesAlertsData, isLoading: loadingSales } = useQuery({
+    queryKey: ['alerts-sales', salesPeriod],
+    queryFn: () =>
+      alertsApi.getAll({
+        alertType: salesAlertType,
+        isResolved: false,
+        limit: 100,
+      }),
+  });
+
   const resolveMutation = useMutation({
     mutationFn: (id: number) => alertsApi.resolve(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
       queryClient.invalidateQueries({ queryKey: ['alerts-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['alerts-sales'] });
       toast.success('Alerta marcada como resuelta');
       setIsResolveOpen(false);
       setSelectedAlert(null);
@@ -121,9 +134,27 @@ export default function AlertList() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
       queryClient.invalidateQueries({ queryKey: ['alerts-summary'] });
-      const total = result.lowStock.length + result.noMovement.length + result.slowMoving.length;
+      queryClient.invalidateQueries({ queryKey: ['alerts-sales'] });
+      const total =
+        result.lowStock.length +
+        result.noMovement.length +
+        result.slowMoving.length +
+        result.lowSales30.length +
+        result.lowSales60.length +
+        result.lowSales90.length +
+        result.discrepancy.length +
+        result.oversellRisk.length;
+
       if (total > 0) {
-        toast.success(`Se detectaron ${total} nuevas alertas`);
+        const details: string[] = [];
+        if (result.lowStock.length) details.push(`${result.lowStock.length} stock bajo`);
+        if (result.oversellRisk.length) details.push(`${result.oversellRisk.length} riesgo sobreventa`);
+        if (result.discrepancy.length) details.push(`${result.discrepancy.length} discrepancias`);
+        if (result.lowSales30.length + result.lowSales60.length + result.lowSales90.length)
+          details.push(`${result.lowSales30.length + result.lowSales60.length + result.lowSales90.length} bajas ventas`);
+        if (result.noMovement.length + result.slowMoving.length)
+          details.push(`${result.noMovement.length + result.slowMoving.length} sin movimiento`);
+        toast.success(`${total} nuevas alertas: ${details.join(', ')}`);
       } else {
         toast.info('No se encontraron nuevas alertas');
       }
@@ -164,14 +195,14 @@ export default function AlertList() {
         return (
           <Badge className="bg-purple-500">
             <Clock className="h-3 w-3 mr-1" />
-            Lento
+            Mov. Lento
           </Badge>
         );
       case 'discrepancy':
         return (
           <Badge className="bg-blue-500">
-            <RefreshCw className="h-3 w-3 mr-1" />
-            Cambio
+            <GitCompareArrows className="h-3 w-3 mr-1" />
+            Discrepancia
           </Badge>
         );
       case 'inventory_update':
@@ -179,6 +210,34 @@ export default function AlertList() {
           <Badge className="bg-cyan-500">
             <Activity className="h-3 w-3 mr-1" />
             Mov. Inventario
+          </Badge>
+        );
+      case 'low_sales_30':
+        return (
+          <Badge className="bg-rose-500">
+            <BarChart2 className="h-3 w-3 mr-1" />
+            Bajas Ventas 30d
+          </Badge>
+        );
+      case 'low_sales_60':
+        return (
+          <Badge className="bg-rose-600">
+            <BarChart2 className="h-3 w-3 mr-1" />
+            Bajas Ventas 60d
+          </Badge>
+        );
+      case 'low_sales_90':
+        return (
+          <Badge className="bg-rose-700">
+            <BarChart2 className="h-3 w-3 mr-1" />
+            Bajas Ventas 90d
+          </Badge>
+        );
+      case 'oversell_risk':
+        return (
+          <Badge className="bg-red-600">
+            <ShieldAlert className="h-3 w-3 mr-1" />
+            Riesgo Sobreventa
           </Badge>
         );
       default:
@@ -213,14 +272,14 @@ export default function AlertList() {
         return (
           <Badge variant="destructive">
             <ArrowDown className="h-3 w-3 mr-1" />
-            Danado
+            Dañado
           </Badge>
         );
       case 'loss':
         return (
           <Badge variant="destructive">
             <ArrowDown className="h-3 w-3 mr-1" />
-            Perdida
+            Pérdida
           </Badge>
         );
       default:
@@ -238,8 +297,22 @@ export default function AlertList() {
     });
   };
 
+  const getSummaryCount = (type: AlertType, resolved = false) => {
+    const entry = summary?.byType?.find((t) => t.type === type);
+    if (!entry) return 0;
+    return resolved ? Number(entry.total) - Number(entry.unresolved) : Number(entry.unresolved);
+  };
+
   const alerts = alertsData?.data || [];
   const movements = movementsData?.data || [];
+  const salesAlerts = salesAlertsData?.data || [];
+
+  const oversellCount = getSummaryCount('oversell_risk');
+  const discrepancyCount = getSummaryCount('discrepancy');
+  const lowSalesTotal =
+    getSummaryCount('low_sales_30') +
+    getSummaryCount('low_sales_60') +
+    getSummaryCount('low_sales_90');
 
   return (
     <div className="space-y-6">
@@ -257,11 +330,25 @@ export default function AlertList() {
         )}
       </div>
 
+      {/* Error global de carga */}
+      {(summaryError || alertsError) && (
+        <Card className="border-red-300 bg-red-50 dark:bg-red-950/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Error al cargar datos. Verifica la conexión con el servidor.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Cards de resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Alertas</CardTitle>
+            <CardTitle className="text-xs font-medium">Total</CardTitle>
             <Bell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -270,7 +357,7 @@ export default function AlertList() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sin Resolver</CardTitle>
+            <CardTitle className="text-xs font-medium">Sin Resolver</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
@@ -279,7 +366,7 @@ export default function AlertList() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Resueltas</CardTitle>
+            <CardTitle className="text-xs font-medium">Resueltas</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -288,18 +375,45 @@ export default function AlertList() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Stock Bajo</CardTitle>
+            <CardTitle className="text-xs font-medium">Stock Bajo</CardTitle>
             <TrendingDown className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-500">
-              {summary?.byType?.find((t) => t.type === 'low_stock')?.unresolved || 0}
+              {getSummaryCount('low_stock')}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mov. Inventario</CardTitle>
+            <CardTitle className="text-xs font-medium">Sobreventa</CardTitle>
+            <ShieldAlert className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{oversellCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-medium">Discrepancias</CardTitle>
+            <GitCompareArrows className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-500">{discrepancyCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-medium">Bajas Ventas</CardTitle>
+            <BarChart2 className="h-4 w-4 text-rose-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-rose-500">{lowSalesTotal}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-medium">Mov. Inventario</CardTitle>
             <Activity className="h-4 w-4 text-cyan-500" />
           </CardHeader>
           <CardContent>
@@ -310,22 +424,33 @@ export default function AlertList() {
         </Card>
       </div>
 
-      {/* Tabs para Alertas y Movimientos */}
+      {/* Tabs */}
       <Tabs defaultValue="alerts" className="space-y-4">
         <TabsList>
           <TabsTrigger value="alerts" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
-            Alertas ({alerts.length})
+            Alertas
+            {(summary?.unresolved ?? 0) > 0 && (
+              <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                {summary?.unresolved}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="sales" className="flex items-center gap-2">
+            <BarChart2 className="h-4 w-4" />
+            Tendencias de Ventas
+            {lowSalesTotal > 0 && (
+              <Badge className="h-5 px-1.5 text-xs bg-rose-500">{lowSalesTotal}</Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="movements" className="flex items-center gap-2">
             <History className="h-4 w-4" />
-            Historial de Movimientos ({movements.length})
+            Historial de Movimientos
           </TabsTrigger>
         </TabsList>
 
         {/* Tab de Alertas */}
         <TabsContent value="alerts" className="space-y-4">
-          {/* Filtros de Alertas */}
           <Card>
             <CardHeader>
               <CardTitle>Filtros de Alertas</CardTitle>
@@ -333,37 +458,41 @@ export default function AlertList() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="alertType">Tipo de Alerta</Label>
+                  <Label>Tipo de Alerta</Label>
                   <Select
-                    value={filter.alertType}
+                    value={filter.alertType || 'all'}
                     onValueChange={(value) =>
-                      setFilter({ ...filter, alertType: value as AlertType | '' })
+                      setFilter({ ...filter, alertType: value === 'all' ? '' : (value as AlertType) })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Todos los tipos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="low_stock">Stock Bajo</SelectItem>
+                      <SelectItem value="oversell_risk">Riesgo de Sobreventa</SelectItem>
+                      <SelectItem value="discrepancy">Discrepancia de Stock</SelectItem>
+                      <SelectItem value="low_sales_30">Bajas Ventas 30 días</SelectItem>
+                      <SelectItem value="low_sales_60">Bajas Ventas 60 días</SelectItem>
+                      <SelectItem value="low_sales_90">Bajas Ventas 90 días</SelectItem>
                       <SelectItem value="no_movement">Sin Movimiento</SelectItem>
                       <SelectItem value="slow_moving">Movimiento Lento</SelectItem>
-                      <SelectItem value="discrepancy">Cambios/Discrepancia</SelectItem>
                       <SelectItem value="inventory_update">Movimiento de Inventario</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="isResolved">Estado</Label>
+                  <Label>Estado</Label>
                   <Select
-                    value={filter.isResolved}
-                    onValueChange={(value) => setFilter({ ...filter, isResolved: value })}
+                    value={filter.isResolved || 'all'}
+                    onValueChange={(value) => setFilter({ ...filter, isResolved: value === 'all' ? '' : value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas</SelectItem>
+                      <SelectItem value="all">Todas</SelectItem>
                       <SelectItem value="false">Sin Resolver</SelectItem>
                       <SelectItem value="true">Resueltas</SelectItem>
                     </SelectContent>
@@ -373,7 +502,6 @@ export default function AlertList() {
             </CardContent>
           </Card>
 
-          {/* Lista de alertas */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -390,13 +518,21 @@ export default function AlertList() {
                 <div className="flex items-center justify-center h-32">
                   <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
+              ) : alertsError ? (
+                <div className="flex flex-col items-center justify-center py-16 text-red-500">
+                  <AlertTriangle className="h-12 w-12 mb-4" />
+                  <p className="font-medium">Error al cargar alertas</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Verifica tu conexión e intenta de nuevo
+                  </p>
+                </div>
               ) : alerts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
                   <CardTitle className="text-xl mb-2">Sin alertas pendientes</CardTitle>
                   <p className="text-muted-foreground text-center">
                     {filter.isResolved === 'false'
-                      ? 'No hay alertas sin resolver. El inventario esta en orden.'
+                      ? 'No hay alertas sin resolver. El inventario está en orden.'
                       : 'No se encontraron alertas con los filtros seleccionados.'}
                   </p>
                 </div>
@@ -407,6 +543,7 @@ export default function AlertList() {
                       <TableHead>Fecha</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Producto</TableHead>
+                      <TableHead>Stock Actual</TableHead>
                       <TableHead>Notas</TableHead>
                       <TableHead>Creada Por</TableHead>
                       <TableHead>Estado</TableHead>
@@ -418,7 +555,13 @@ export default function AlertList() {
                     {alerts.map((alert) => (
                       <TableRow
                         key={alert.id}
-                        className={!alert.isResolved ? 'bg-red-50 dark:bg-red-950/20' : ''}
+                        className={
+                          !alert.isResolved
+                            ? alert.alertType === 'oversell_risk'
+                              ? 'bg-red-100 dark:bg-red-950/30'
+                              : 'bg-red-50 dark:bg-red-950/20'
+                            : ''
+                        }
                       >
                         <TableCell className="text-sm">{formatDate(alert.createdAt)}</TableCell>
                         <TableCell>{getAlertTypeBadge(alert.alertType)}</TableCell>
@@ -433,13 +576,19 @@ export default function AlertList() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm max-w-xs truncate" title={alert.notes || ''}>
+                        <TableCell className="text-sm font-medium">
+                          {alert.product?.inventory?.currentStock ?? '-'}
+                        </TableCell>
+                        <TableCell
+                          className="text-sm max-w-xs truncate"
+                          title={alert.notes || ''}
+                        >
                           {alert.notes || '-'}
                         </TableCell>
                         <TableCell className="text-sm">
                           {alert.createdBy
                             ? `${alert.createdBy.firstName} ${alert.createdBy.lastName}`
-                            : '-'}
+                            : 'Sistema'}
                         </TableCell>
                         <TableCell>
                           {alert.isResolved ? (
@@ -493,9 +642,121 @@ export default function AlertList() {
           </Card>
         </TabsContent>
 
+        {/* Tab de Tendencias de Ventas */}
+        <TabsContent value="sales" className="space-y-4">
+          {/* Indicadores por período */}
+          <div className="grid grid-cols-3 gap-4">
+            {(['30', '60', '90'] as const).map((period) => {
+              const count = getSummaryCount(`low_sales_${period}` as AlertType);
+              return (
+                <Card
+                  key={period}
+                  className={`cursor-pointer border-2 transition-colors ${
+                    salesPeriod === period ? 'border-rose-500' : 'border-transparent'
+                  }`}
+                  onClick={() => setSalesPeriod(period)}
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Últimos {period} días</CardTitle>
+                    <BarChart2
+                      className={`h-4 w-4 ${count > 0 ? 'text-rose-500' : 'text-muted-foreground'}`}
+                    />
+                  </CardHeader>
+                  <CardContent>
+                    <div
+                      className={`text-2xl font-bold ${count > 0 ? 'text-rose-500' : 'text-muted-foreground'}`}
+                    >
+                      {count}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      productos sin ventas
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart2 className="h-5 w-5 text-rose-500" />
+                Productos con Bajas Ventas — Últimos {salesPeriod} días
+                {loadingSales && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingSales ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : salesAlerts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
+                  <CardTitle className="text-xl mb-2">Sin alertas de ventas</CardTitle>
+                  <p className="text-muted-foreground text-center">
+                    Todos los productos tienen actividad de ventas en los últimos {salesPeriod} días.
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Producto</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead className="text-right">Stock Actual</TableHead>
+                      <TableHead>Período</TableHead>
+                      <TableHead>Notas</TableHead>
+                      <TableHead>Detectada</TableHead>
+                      {canResolve && <TableHead className="text-right">Acciones</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesAlerts.map((alert) => (
+                      <TableRow key={alert.id} className="bg-rose-50 dark:bg-rose-950/20">
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-medium">{alert.product?.name || 'Producto'}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {alert.product?.sku || `ID: ${alert.productId}`}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {alert.product?.inventory?.currentStock ?? '-'}
+                        </TableCell>
+                        <TableCell>{getAlertTypeBadge(alert.alertType)}</TableCell>
+                        <TableCell
+                          className="text-sm max-w-xs truncate"
+                          title={alert.notes || ''}
+                        >
+                          {alert.notes || '-'}
+                        </TableCell>
+                        <TableCell className="text-sm">{formatDate(alert.createdAt)}</TableCell>
+                        {canResolve && (
+                          <TableCell className="text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleResolve(alert.id)}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Resolver
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Tab de Historial de Movimientos */}
         <TabsContent value="movements" className="space-y-4">
-          {/* Filtros de Movimientos */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -506,30 +767,32 @@ export default function AlertList() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="movementType">Tipo de Movimiento</Label>
+                  <Label>Tipo de Movimiento</Label>
                   <Select
-                    value={movementFilter.movementType}
+                    value={movementFilter.movementType || 'all'}
                     onValueChange={(value) =>
-                      setMovementFilter({ ...movementFilter, movementType: value as MovementType | '' })
+                      setMovementFilter({
+                        ...movementFilter,
+                        movementType: value === 'all' ? '' : (value as MovementType),
+                      })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Todos los tipos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="entry">Entrada</SelectItem>
                       <SelectItem value="sale">Venta</SelectItem>
                       <SelectItem value="adjustment">Ajuste</SelectItem>
-                      <SelectItem value="damaged">Danado</SelectItem>
-                      <SelectItem value="loss">Perdida</SelectItem>
+                      <SelectItem value="damaged">Dañado</SelectItem>
+                      <SelectItem value="loss">Pérdida</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="startDate">Fecha Inicio</Label>
+                  <Label>Fecha Inicio</Label>
                   <Input
-                    id="startDate"
                     type="date"
                     value={movementFilter.startDate}
                     onChange={(e) =>
@@ -538,9 +801,8 @@ export default function AlertList() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endDate">Fecha Fin</Label>
+                  <Label>Fecha Fin</Label>
                   <Input
-                    id="endDate"
                     type="date"
                     value={movementFilter.endDate}
                     onChange={(e) =>
@@ -552,7 +814,6 @@ export default function AlertList() {
             </CardContent>
           </Card>
 
-          {/* Lista de Movimientos */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -564,6 +825,14 @@ export default function AlertList() {
               {loadingMovements ? (
                 <div className="flex items-center justify-center h-32">
                   <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : movementsError ? (
+                <div className="flex flex-col items-center justify-center py-16 text-red-500">
+                  <AlertTriangle className="h-12 w-12 mb-4" />
+                  <p className="font-medium">Error al cargar movimientos</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Verifica tu conexión e intenta de nuevo
+                  </p>
                 </div>
               ) : movements.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
@@ -582,7 +851,7 @@ export default function AlertList() {
                       <TableHead>Producto</TableHead>
                       <TableHead className="text-right">Cantidad</TableHead>
                       <TableHead className="text-right">Antes</TableHead>
-                      <TableHead className="text-right">Despues</TableHead>
+                      <TableHead className="text-right">Después</TableHead>
                       <TableHead>Referencia</TableHead>
                       <TableHead>Usuario</TableHead>
                       <TableHead>Notas</TableHead>
@@ -623,7 +892,10 @@ export default function AlertList() {
                             ? `${movement.createdBy.firstName} ${movement.createdBy.lastName}`
                             : '-'}
                         </TableCell>
-                        <TableCell className="text-sm max-w-xs truncate" title={movement.notes || ''}>
+                        <TableCell
+                          className="text-sm max-w-xs truncate"
+                          title={movement.notes || ''}
+                        >
                           {movement.notes || '-'}
                         </TableCell>
                       </TableRow>
@@ -642,7 +914,7 @@ export default function AlertList() {
           <DialogHeader>
             <DialogTitle>Resolver Alerta</DialogTitle>
             <DialogDescription>
-              Esta a punto de marcar esta alerta como resuelta. Esto indica que el problema ha sido
+              Está a punto de marcar esta alerta como resuelta. Esto indica que el problema ha sido
               atendido.
             </DialogDescription>
           </DialogHeader>
