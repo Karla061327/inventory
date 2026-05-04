@@ -75,7 +75,7 @@ export default function AlertList() {
   });
 
   // Queries
-  const { data: alertsData, isLoading: loadingAlerts } = useQuery({
+  const { data: alertsData, isLoading: loadingAlerts, isError: alertsIsError, error: alertsError } = useQuery({
     queryKey: ['alerts', filter],
     queryFn: () =>
       alertsApi.getAll({
@@ -85,12 +85,12 @@ export default function AlertList() {
       }),
   });
 
-  const { data: summary } = useQuery({
+  const { data: summary, isError: summaryIsError } = useQuery({
     queryKey: ['alerts-summary'],
     queryFn: () => alertsApi.getSummary(),
   });
 
-  const { data: movementsData, isLoading: loadingMovements } = useQuery({
+  const { data: movementsData, isLoading: loadingMovements, isError: movementsIsError } = useQuery({
     queryKey: ['all-movements', movementFilter],
     queryFn: () =>
       inventoryApi.getMovements({
@@ -241,6 +241,24 @@ export default function AlertList() {
   const alerts = alertsData?.data || [];
   const movements = movementsData?.data || [];
 
+  if (alertsIsError || summaryIsError || movementsIsError) {
+    const errMsg = alertsError instanceof Error ? alertsError.message : String(alertsError ?? '');
+    return (
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold">Alertas y Registro de Actividad</h1>
+        <div className="rounded-md border border-red-400 bg-red-50 p-4 text-red-800">
+          <p className="font-semibold">Error al cargar las alertas</p>
+          {errMsg && <p className="text-sm mt-1 font-mono">{errMsg}</p>}
+          <p className="text-sm mt-1">
+            {alertsIsError && 'Alertas: error · '}
+            {summaryIsError && 'Resumen: error · '}
+            {movementsIsError && 'Movimientos: error'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -335,16 +353,16 @@ export default function AlertList() {
                 <div className="space-y-2">
                   <Label htmlFor="alertType">Tipo de Alerta</Label>
                   <Select
-                    value={filter.alertType}
+                    value={filter.alertType || 'all'}
                     onValueChange={(value) =>
-                      setFilter({ ...filter, alertType: value as AlertType | '' })
+                      setFilter({ ...filter, alertType: (value === 'all' ? '' : value) as AlertType | '' })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Todos los tipos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="low_stock">Stock Bajo</SelectItem>
                       <SelectItem value="no_movement">Sin Movimiento</SelectItem>
                       <SelectItem value="slow_moving">Movimiento Lento</SelectItem>
@@ -356,14 +374,14 @@ export default function AlertList() {
                 <div className="space-y-2">
                   <Label htmlFor="isResolved">Estado</Label>
                   <Select
-                    value={filter.isResolved}
-                    onValueChange={(value) => setFilter({ ...filter, isResolved: value })}
+                    value={filter.isResolved || 'all'}
+                    onValueChange={(value) => setFilter({ ...filter, isResolved: value === 'all' ? '' : value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas</SelectItem>
+                      <SelectItem value="all">Todas</SelectItem>
                       <SelectItem value="false">Sin Resolver</SelectItem>
                       <SelectItem value="true">Resueltas</SelectItem>
                     </SelectContent>
@@ -508,16 +526,16 @@ export default function AlertList() {
                 <div className="space-y-2">
                   <Label htmlFor="movementType">Tipo de Movimiento</Label>
                   <Select
-                    value={movementFilter.movementType}
+                    value={movementFilter.movementType || 'all'}
                     onValueChange={(value) =>
-                      setMovementFilter({ ...movementFilter, movementType: value as MovementType | '' })
+                      setMovementFilter({ ...movementFilter, movementType: (value === 'all' ? '' : value) as MovementType | '' })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Todos los tipos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="entry">Entrada</SelectItem>
                       <SelectItem value="sale">Venta</SelectItem>
                       <SelectItem value="adjustment">Ajuste</SelectItem>

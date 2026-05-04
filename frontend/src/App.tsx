@@ -11,6 +11,7 @@ import InventoryPage from '@/pages/inventory/InventoryPage';
 import CategoryList from '@/pages/categories/CategoryList';
 import SupplierList from '@/pages/suppliers/SupplierList';
 import AlertList from '@/pages/alerts/AlertList';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,7 +36,7 @@ export default function App() {
                 <Route path="/inventory" element={<InventoryPage />} />
                 <Route path="/categories" element={<CategoryList />} />
                 <Route path="/suppliers" element={<SupplierList />} />
-                <Route path="/alerts" element={<AlertList />} />
+                <Route path="/alerts" element={<ErrorBoundary><AlertList /></ErrorBoundary>} />
               </Route>
             </Route>
           </Routes>

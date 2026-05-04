@@ -129,7 +129,7 @@ Convertir la gestión de inventario en un proceso simple, automático y accesibl
 **RF-009: Stock Bajo**
 
 - Sistema detecta cuando stock < Punto de reorden
-- Cada producto tiene un nivel mínimo configurable
+- Cada producto tiene un nivel mínim o configurable
 - Alerta visible: Panel, email (opcional), notificación en sistema
 - Acción: Generar sugerencia de compra automática
 - Resultado: Usuario notificado y puede tomar acción
