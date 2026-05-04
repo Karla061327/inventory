@@ -28,7 +28,7 @@ import { UserRole } from '../common/enums';
 @ApiTags('Alerts')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('api/alerts')
+@Controller('alerts')
 export class AlertsController {
   constructor(private readonly alertsService: AlertsService) {}
 

@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run test:*)"
+      "Bash(npm run test:*)",
+      "Bash(pkill -f \"vite --port 5174\")",
+      "Bash(curl -s http://localhost:3000/api/api/alerts)",
+      "Bash(curl -s http://localhost:3000/api/alerts/summary)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000/api/alerts)",
+      "Bash(curl *)",
+      "Bash(pkill -f \"nest start\")",
+      "Bash(node dist/main.js)",
+      "Bash(npx tsc *)"
     ],
     "deny": [],
     "ask": []
