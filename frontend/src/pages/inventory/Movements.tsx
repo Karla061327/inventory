@@ -118,16 +118,16 @@ export default function Movements() {
             <div className="space-y-2">
               <Label htmlFor="movementType">Tipo de Movimiento</Label>
               <Select
-                value={filters.movementType}
+                value={filters.movementType || 'all'}
                 onValueChange={(value) =>
-                  setFilters({ ...filters, movementType: value as MovementType | '' })
+                  setFilters({ ...filters, movementType: value === 'all' ? '' : value as MovementType })
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos los tipos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="entry">Entrada</SelectItem>
                   <SelectItem value="sale">Venta</SelectItem>
                   <SelectItem value="adjustment">Ajuste</SelectItem>
